@@ -1,0 +1,448 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UiPath Agentic Automation Mock Test 2</title>
+<style>
+  :root{--orange:#f97316;--gray:#6b7280;--bg1:#fff7ed;}
+  body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:linear-gradient(180deg,#fff7ed 0%, #fff 100%); color:#111;}
+  .container{max-width:1100px;margin:32px auto;padding:20px;}
+  .card{background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);padding:20px;}
+  .center{text-align:center;}
+  h1{font-size:28px;margin:8px 0;}
+  h2{font-size:18px;color:var(--orange);margin:0;}
+  button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;font-weight:600;}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-ghost{background:#f3f4f6;color:#111;border:1px solid #e5e7eb;}
+  .info-list{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;}
+  .info-item{flex:1;min-width:180px;background:#fffbeb;padding:12px;border-radius:8px;}
+  .timer{font-size:20px;font-weight:700;color:var(--orange);}
+  .progress-bar{height:10px;background:#e6e6e6;border-radius:10px;overflow:hidden;margin:12px 0;}
+  .progress{height:10px;background:linear-gradient(90deg,var(--orange),#fb923c);width:0%;}
+  .question-title{font-size:20px;margin:12px 0 8px;}
+  .option{border:1px solid #e5e7eb;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .option.selected{background:#fff7ed;border-color:var(--orange);}
+  .nav{display:flex;justify-content:space-between;margin-top:12px;}
+  .grid-q{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-top:12px;}
+  .qbox{padding:8px;border-radius:6px;text-align:center;border:1px solid #e5e7eb;}
+  .qbox.answered{background:#34d399;color:#fff;}
+  .qbox.review{background:#fde68a;color:#111;}
+  .qbox.current{background:var(--orange);color:#fff;}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  pre{white-space:pre-wrap;}
+  .explain{background:#f0f9ff;border-left:4px solid #60a5fa;padding:12px;border-radius:6px;margin-top:8px;}
+  .badge{display:inline-block;background:#fde68a;padding:4px 8px;border-radius:999px;font-weight:700;}
+  .certificate-card{border: 4px solid #f97316; padding: 40px; background: #fff; max-width: 800px; margin: 40px auto; text-align: center; font-family: 'Times New Roman', serif;}
+  .certificate-title{font-size: 36px; color: #111; margin-bottom: 20px;}
+  .certificate-subtitle{font-size: 24px; color: #f97316; margin-bottom: 20px;}
+  .certificate-text{font-size: 18px; margin: 10px 0;}
+  .certificate-name{font-size: 28px; font-weight: bold; color: #111; margin: 20px 0;}
+  .certificate-date{font-size: 16px; color: #6b7280;}
+  .certificate-logo{width: 150px; margin-bottom: 20px;}
+  .input-field{padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; width: 300px; margin: 12px 0;}
+  .error-message{color: red; font-size: 14px; margin-bottom: 12px;}
+  .review-checkbox{margin-top:12px;display:flex;align-items:center;gap:8px;}
+  @media (max-width:700px){.grid-q{grid-template-columns:repeat(6,1fr);} h1{font-size:20px} .certificate-title{font-size:28px;} .certificate-subtitle{font-size:20px;} .input-field{width: 100%;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="app"></div>
+</div>
+
+<script>
+// Questions data for Mock Test 2 (45 scenario-based questions)
+const questions = [
+  {"id":1,"section":"Agentic AI and agentic automation concepts","question":"A retail company wants to automate inventory restocking with fluctuating demand. The current RPA system fails due to rigid rules. Which agentic AI feature should they implement to adapt to demand shifts?","options":["Pre-programmed static workflows","Reinforcement learning for real-time adjustments","Manual demand forecasting","Fixed rule-based scripts"],"correct":[1],"multiSelect":false,"explanation":"Reinforcement learning enables the agent to adapt to fluctuating demand in real-time, overcoming the rigidity of traditional RPA."},
+  {"id":2,"section":"Agentic AI and agentic automation concepts","question":"A bank uses robots to process loan applications but struggles with unstructured applicant notes. An agentic solution is proposed. How should robots, agents, and humans collaborate to improve this process?","options":["Robots handle all tasks independently","Agents analyze notes, robots process data, and humans approve complex cases","Humans rewrite notes for robots","Agents replace humans entirely"],"correct":[1],"multiSelect":false,"explanation":"Agents analyze unstructured data, robots process structured inputs, and humans handle approvals, leveraging agentic orchestration."},
+  {"id":3,"section":"Agentic AI and agentic automation concepts","question":"A healthcare provider automates patient scheduling but faces delays with ambiguous appointment requests. Which generative AI capability should enhance the agent to resolve this? (Select ALL that apply)","options":["Natural language understanding","Predefined scheduling templates","Adaptive response generation","Static data entry"],"correct":[0,2],"multiSelect":true,"explanation":"Natural language understanding and adaptive responses allow the agent to handle ambiguous requests effectively."},
+  {"id":4,"section":"Agentic discovery","question":"A logistics firm wants to automate route optimization with real-time traffic data. During discovery, what factor should determine if agentic automation is feasible?","options":["Availability of fixed routes","Assessment of technology, context, and human oversight needs","Cost of existing software","Manual route planning expertise"],"correct":[1],"multiSelect":false,"explanation":"Feasibility requires evaluating technology, context, and human oversight for real-time adaptability."},
+  {"id":5,"section":"Agentic discovery","question":"An e-commerce company plans an agent to handle customer refunds. What characteristic in the agent story ensures integration with payment gateways?","options":["Trigger: Refund request","Instructions: Process refund","Context: Customer history","Tools: Payment API integration"],"correct":[3],"multiSelect":false,"explanation":"The 'Tools' characteristic enables integration with payment gateways for refund processing."},
+  {"id":6,"section":"Agent blueprint design","question":"A manufacturing firm needs an agent to schedule maintenance based on equipment sensor data. Which grounding strategy should be defined to handle variable data formats?","options":["Fixed template matching","Dynamic grounding with Storage Buckets","Manual data input","Static rule sets"],"correct":[1],"multiSelect":false,"explanation":"Dynamic grounding with Storage Buckets adapts to variable sensor data formats."},
+  {"id":7,"section":"Agent blueprint design","question":"A telecom company builds an agent to troubleshoot network issues. A system prompt sets professionalism, while a user prompt requests a specific outage report. What defines their roles?","options":["System prompt handles reports; user prompt sets tone","System prompt sets tone; user prompt requests reports","Both set tone and reports","Neither defines roles"],"correct":[1],"multiSelect":false,"explanation":"System prompts establish tone, while user prompts specify task details like outage reports."},
+  {"id":8,"section":"Context Grounding","question":"A legal firm’s agent reviews contracts using a secure document repository. Which configuration ensures data privacy compliance?","options":["Public cloud storage","Integration Service with encrypted access","Unsecured email attachments","Random web data"],"correct":[1],"multiSelect":false,"explanation":"Integration Service with encryption ensures secure, compliant access to the repository."},
+  {"id":9,"section":"Escalations","question":"An insurance agent processes a $15,000 claim with a 35% confidence score. What escalation action should be triggered?","options":["Approve the claim automatically","Escalate to Action Center for human review","Ignore the confidence score","Delay processing indefinitely"],"correct":[1],"multiSelect":false,"explanation":"A low confidence score below 50% requires escalation to Action Center for review."},
+  {"id":10,"section":"Agentic evaluations","question":"A marketing team’s agent generates ad copy with varying styles. Which evaluation method ensures consistency with brand guidelines?","options":["Exact Match","LLM-as-a-Judge with guideline checks","JSON Similarity","Time-based review"],"correct":[1],"multiSelect":false,"explanation":"LLM-as-a-Judge evaluates qualitative consistency against brand guidelines."},
+  {"id":11,"section":"Prompt engineering","question":"A customer service agent must summarize a 300-word complaint into 50 words. Design a zero-shot prompt with constraints.","options":["Summarize the complaint","Summarize in 50 words, focusing on key issues, no opinions","Process complaint data","Provide full text"],"correct":[1],"multiSelect":false,"explanation":"A zero-shot prompt with a 50-word constraint and focus on key issues guides the summary."},
+  {"id":12,"section":"UiPath Platform components and integrations","question":"A retailer’s agent extracts product details from supplier PDFs. Which Studio Web component should be used?","options":["Send Email activity","Document Understanding framework","Web Search tool","Delay activity"],"correct":[1],"multiSelect":false,"explanation":"Document Understanding extracts data from supplier PDFs effectively."},
+  {"id":13,"section":"Agentic orchestration with UiPath Maestro","question":"A BPMN process requires an agent to validate order details before human approval. How should the Service Task be set?","options":["Run unattended workflow","Start and wait for agent, then Action Center task","Manual validation only","Email notification"],"correct":[1],"multiSelect":false,"explanation":"'Start and wait for agent' with Action Center integrates validation and approval."},
+  {"id":14,"section":"Autopilot for everyone","question":"A non-technical HR manager needs an agent to schedule interviews. Is Autopilot for Everyone appropriate, and why?","options":["No, requires coding","Yes, uses natural language input","No, only for developers","Yes, but needs scripts"],"correct":[1],"multiSelect":false,"explanation":"Autopilot’s natural language interface suits non-technical users for scheduling."},
+  {"id":15,"section":"Agentic AI and agentic automation concepts","question":"A travel agency automates booking with multi-lingual requests. How should an agent use LLMs to improve?","options":["Limit to one language","Use LLMs for real-time translation and context-aware booking","Rely on manual translation","Process only structured data"],"correct":[1],"multiSelect":false,"explanation":"LLMs enable multi-lingual translation and context-aware booking enhancements."},
+  {"id":16,"section":"Agentic discovery","question":"A hospital wants to automate patient triage with varying symptom descriptions. What discovery step ensures success?","options":["Focus on fixed symptom lists","Assess context, technology, and human oversight for variability","Prioritize cost only","Ignore medical guidelines"],"correct":[1],"multiSelect":false,"explanation":"Assessing context and oversight handles variable symptom descriptions."},
+  {"id":17,"section":"Agent blueprint design","question":"A bank builds an agent to detect fraud in transactions. Which evaluation criterion ensures accuracy?","options":["Processing speed","Accuracy against fraud patterns","User feedback only","Response time"],"correct":[1],"multiSelect":false,"explanation":"Accuracy against fraud patterns is critical for fraud detection."},
+  {"id":18,"section":"Context Grounding","question":"An agent uses historical sales data from Orchestrator to forecast demand. Which configuration supports this?","options":["Public API access","Storage Bucket integration","Email data only","Manual uploads"],"correct":[1],"multiSelect":false,"explanation":"Storage Buckets provide secure access to historical sales data."},
+  {"id":19,"section":"Escalations","question":"A financial agent processes a $20,000 transaction exceeding its limit. What escalation logic applies?","options":["Proceed without review","Escalate to Action Center for approval","Log and ignore","Disable the agent"],"correct":[1],"multiSelect":false,"explanation":"Exceeding the limit requires Action Center escalation for approval."},
+  {"id":20,"section":"Agentic evaluations","question":"A logistics agent predicts delivery times with variable routes. Which metric ensures reliability?","options":["Color preference","Accuracy and response time","User login rate","Escalation frequency"],"correct":[1],"multiSelect":false,"explanation":"Accuracy and response time are key for delivery time reliability."},
+  {"id":21,"section":"Prompt engineering","question":"An agent classifies emails into Urgent, Normal, or Low Priority. Design a few-shot prompt with an example.","options":["Classify this email","Classify into Urgent, Normal, or Low Priority. Example: 'ASAP delivery' → Urgent","Process email","Assign random labels"],"correct":[1],"multiSelect":false,"explanation":"A few-shot prompt with an example guides accurate email classification."},
+  {"id":22,"section":"UiPath Platform components and integrations","question":"A sales agent integrates with Salesforce for lead updates. Which Studio Web feature is used?","options":["Document Understanding","Integration Service with Salesforce","Web Search tool","Email activity"],"correct":[1],"multiSelect":false,"explanation":"Integration Service connects the agent to Salesforce for lead updates."},
+  {"id":23,"section":"Agentic orchestration with UiPath Maestro","question":"A BPMN process validates data with an agent, then routes to a robot. How is this sequenced?","options":["Run robot first","Service Task for agent, then Orchestrator workflow","Manual steps only","Agent and robot together"],"correct":[1],"multiSelect":false,"explanation":"Sequential Service Task and Orchestrator workflow ensure proper sequencing."},
+  {"id":24,"section":"Autopilot for everyone","question":"A manager needs an agent to draft performance reviews without coding. Is Autopilot suitable?","options":["No, requires coding","Yes, with natural language input","No, for technical users only","Yes, but with scripts"],"correct":[1],"multiSelect":false,"explanation":"Autopilot’s natural language input supports non-coding review drafting."},
+  {"id":25,"section":"Agentic AI and agentic automation concepts","question":"A retailer automates pricing with real-time competitor data. How does generative AI enhance this?","options":["Limits to static prices","Generates dynamic pricing models","Requires manual updates","Processes historical data only"],"correct":[1],"multiSelect":false,"explanation":"Generative AI creates dynamic pricing models for real-time adaptation."},
+  {"id":26,"section":"Agentic discovery","question":"A university automates course scheduling with conflicting student preferences. What ensures feasibility?","options":["Fixed schedules only","Assess context and technology for adaptability","Cost reduction focus","Ignore student input"],"correct":[1],"multiSelect":false,"explanation":"Context and technology assessment handles conflicting preferences."},
+  {"id":27,"section":"Agent blueprint design","question":"An agent prioritizes customer support tickets by urgency. Which prompt type is used?","options":["System prompt with fixed rules","User prompt with urgency criteria","Context prompt only","Tool prompt only"],"correct":[1],"multiSelect":false,"explanation":"User prompts with urgency criteria guide dynamic ticket prioritization."},
+  {"id":28,"section":"Context Grounding","question":"An agent uses a policy manual for compliance checks. Which source ensures grounding?","options":["Social media posts","Storage Bucket with manual files","Random web data","Email threads"],"correct":[1],"multiSelect":false,"explanation":"Storage Buckets provide structured access to the policy manual."},
+  {"id":29,"section":"Escalations","question":"An agent detects a data breach in a customer record. What escalation is required?","options":["Proceed with processing","Escalate to Action Center for security review","Ignore the breach","Log and wait"],"correct":[1],"multiSelect":false,"explanation":"A data breach requires immediate escalation to Action Center."},
+  {"id":30,"section":"Agentic evaluations","question":"A supply chain agent adjusts inventory levels. Which method tracks performance?","options":["Color scheme","Accuracy and escalation rate","User satisfaction only","Response time alone"],"correct":[1],"multiSelect":false,"explanation":"Accuracy and escalation rate ensure inventory adjustment performance."},
+  {"id":31,"section":"Prompt engineering","question":"An agent solves a multi-step equation (3x + 5 = 14). Design a chain-of-thought prompt.","options":["Solve 3x + 5 = 14 directly","Break down: 1) Subtract 5, 2) Divide by 3, 3) Verify","Use random values","Provide answer only"],"correct":[1],"multiSelect":false,"explanation":"Chain-of-thought prompts guide step-by-step equation solving."},
+  {"id":32,"section":"UiPath Platform components and integrations","question":"An agent sends Slack notifications for order updates. Which feature configures this?","options":["Document Understanding","Integration Service with Slack","Web Search tool","Email activity"],"correct":[1],"multiSelect":false,"explanation":"Integration Service configures Slack notifications for order updates."},
+  {"id":33,"section":"Agentic orchestration with UiPath Maestro","question":"A BPMN process has an agent validate, then a human approve. How is this modeled?","options":["Single Service Task","Service Task for agent, Action Center for approval","Manual steps only","Agent only"],"correct":[1],"multiSelect":false,"explanation":"Service Task and Action Center model validation and approval sequence."},
+  {"id":34,"section":"Autopilot for everyone","question":"A team needs an agent to generate reports without coding. Is Autopilot suitable?","options":["No, coding required","Yes, with natural language input","No, for developers only","Yes, with scripts"],"correct":[1],"multiSelect":false,"explanation":"Autopilot’s natural language input supports non-coding report generation."},
+  {"id":35,"section":"Agentic AI and agentic automation concepts","question":"A hotel automates booking with dynamic pricing. How does agentic AI differ from RPA?","options":["Follows fixed scripts","Adapts pricing goals dynamically","Requires constant input","Limits to single tasks"],"correct":[1],"multiSelect":false,"explanation":"Agentic AI adapts pricing goals, unlike RPA’s fixed scripts."},
+  {"id":36,"section":"Agentic discovery","question":"A clinic automates patient follow-ups with varied responses. What ensures success?","options":["Fixed response templates","Assess context and human oversight","Cost focus only","Ignore variability"],"correct":[1],"multiSelect":false,"explanation":"Context and oversight handle varied patient responses."},
+  {"id":37,"section":"Agent blueprint design","question":"An agent handles multi-lingual support tickets. Which tool is critical?","options":["Email tool","Language translation tools","Web search","Delay activity"],"correct":[1],"multiSelect":false,"explanation":"Translation tools are essential for multi-lingual ticket handling."},
+  {"id":38,"section":"Context Grounding","question":"An agent checks compliance using a secure policy document. Which configuration ensures security?","options":["Public storage","Storage Bucket with encryption","Unsecured share","Email only"],"correct":[1],"multiSelect":false,"explanation":"Encrypted Storage Buckets ensure secure policy access."},
+  {"id":39,"section":"Escalations","question":"An agent processes a high-risk loan with 25% confidence. What action is needed?","options":["Approve automatically","Escalate to Action Center","Ignore confidence","Disable agent"],"correct":[1],"multiSelect":false,"explanation":"Low confidence requires escalation for high-risk decisions."},
+  {"id":40,"section":"Agentic evaluations","question":"A retail agent generates product descriptions. Which method ensures brand alignment?","options":["Exact Match","LLM-as-a-Judge with guidelines","JSON Similarity","Manual check"],"correct":[1],"multiSelect":false,"explanation":"LLM-as-a-Judge with guidelines ensures brand-aligned descriptions."},
+  {"id":41,"section":"Prompt engineering","question":"An agent summarizes a 500-word report in 75 words. Add constraints to the prompt.","options":["Summarize the report","Summarize in 75 words, focus on facts, no opinions","Process report data","Full text output"],"correct":[1],"multiSelect":false,"explanation":"Constraints like word limit and focus on facts guide the summary."},
+  {"id":42,"section":"UiPath Platform components and integrations","question":"An agent fetches weather data via REST API. Which feature is used?","options":["Document Understanding","Integration Service with REST","Web Search","Email activity"],"correct":[1],"multiSelect":false,"explanation":"Integration Service with REST connects to weather APIs."},
+  {"id":43,"section":"Agentic orchestration with UiPath Maestro","question":"A BPMN process has an agent validate, then a robot process. How is this set?","options":["Run robot first","Service Task for agent, then Orchestrator","Manual only","Agent and robot together"],"correct":[1],"multiSelect":false,"explanation":"Service Task and Orchestrator sequence validation and processing."},
+  {"id":44,"section":"Autopilot for everyone","question":"A user automates email responses without coding. Is Autopilot suitable?","options":["No, coding needed","Yes, with natural language","No, for technical users","Yes, with scripts"],"correct":[1],"multiSelect":false,"explanation":"Autopilot’s natural language input supports non-coding automation."},
+  {"id":45,"section":"Agentic AI and agentic automation concepts","question":"A manufacturer optimizes supply chain with real-time demand. What synergy drives this?","options":["Static robot scripts","Agents, robots, and human oversight with AI insights","Manual updates only","Fixed workflows"],"correct":[1],"multiSelect":false,"explanation":"AI-driven collaboration optimizes supply chains for real-time demand."}
+];
+
+let state = {
+  examStarted: false,
+  currentIndex: 0,
+  answers: {}, // id -> array of selected option indexes
+  review: [], // array of question IDs marked for review
+  timeLeft: 5400, // 90 minutes
+  timerInterval: null,
+  showResults: false,
+  showCertificate: false,
+  userName: '',
+  userNameError: ''
+};
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    if (state.timeLeft > 0) {
+      state.timeLeft--;
+      render();
+    } else {
+      submitExam();
+    }
+  }, 1000);
+}
+
+function renderStart() {
+  return `
+    <div class="card center">
+      <div style="display:flex;justify-content:center;margin-bottom:8px">
+        <div style="background:var(--orange);color:#fff;border-radius:999px;padding:18px;font-size:28px;">🏆</div>
+      </div>
+      <h1>UiPath Agentic Automation Associate</h1>
+      <h2>Mock Test 2</h2>
+      <div style="margin-top:18px">
+        <label for="userName" style="font-weight:600">Enter Your Name:</label>
+        <div><input type="text" id="userName" class="input-field" placeholder="Your Name" value="${state.userName}"></div>
+        ${state.userNameError ? `<div class="error-message">${state.userNameError}</div>` : ''}
+      </div>
+      <div style="margin-top:18px" class="info-list">
+        <div class="info-item"><strong>Total Questions:</strong><div style="margin-top:6px">45</div></div>
+        <div class="info-item"><strong>Duration:</strong><div style="margin-top:6px">90 minutes</div></div>
+        <div class="info-item"><strong>Passing Score:</strong><div style="margin-top:6px">70% (32 correct)</div></div>
+        <div class="info-item"><strong>Question Types:</strong><div style="margin-top:6px">Single and Multiple Select</div></div>
+      </div>
+      <div style="margin-top:18px;text-align:left;">
+        <strong>Important Instructions:</strong>
+        <ul>
+          <li>Read each question carefully before selecting your answer</li>
+          <li>Some questions require multiple selections - look for "Select ALL that apply"</li>
+          <li>You can navigate between questions using Previous/Next buttons</li>
+          <li>Use the 'Mark for Review' checkbox to flag questions for later review</li>
+          <li>A timer will run throughout the exam</li>
+          <li>Review your answers before final submission</li>
+        </ul>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-primary" onclick="beginExam()">Start Exam</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuestion() {
+  const q = questions[state.currentIndex];
+  const userAns = state.answers[q.id] || [];
+  const isReviewed = state.review.includes(q.id);
+  const progressPct = Math.round(((state.currentIndex + 1) / questions.length) * 100);
+  const optionsHtml = q.options.map((opt, idx) => {
+    const sel = userAns.includes(idx) ? 'selected' : '';
+    return `<div class="option ${sel}" onclick="toggleAnswer(${q.id}, ${idx})">
+      <div style="width:18px;height:18px;border-radius:999px;border:2px solid ${sel ? 'var(--orange)' : '#cbd5e1'};display:inline-block;margin-right:8px;${sel ? 'background:var(--orange)' : ''}"></div>
+      <div style="flex:1">${opt}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="timer">${formatTime(state.timeLeft)}</div>
+          <div style="font-weight:700;color:var(--gray)">Question ${state.currentIndex + 1} of ${questions.length}</div>
+        </div>
+        <div><button class="btn-primary" onclick="submitExam()">Submit Exam</button></div>
+      </div>
+      <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
+      <div style="margin-top:12px">
+        <div class="badge">${q.section}</div>
+      </div>
+      <h3 class="question-title">${q.question}</h3>
+      ${q.multiSelect ? `<div style="background:#eff6ff;padding:8px;border-left:4px solid #60a5fa;border-radius:6px;margin-bottom:12px">Select ALL that apply - Multiple answers required</div>` : ''}
+      <div>${optionsHtml}</div>
+      <div class="review-checkbox">
+        <input type="checkbox" id="review-${q.id}" ${isReviewed ? 'checked' : ''} onclick="toggleReview(${q.id})">
+        <label for="review-${q.id}">Mark for Review</label>
+      </div>
+      <div class="nav">
+        <div>
+          <button onclick="prevQ()" class="btn-ghost" ${state.currentIndex === 0 ? 'disabled' : ''}>Previous</button>
+        </div>
+        <div>
+          <button onclick="nextQ()" class="btn-primary" ${state.currentIndex === questions.length - 1 ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <strong>Question Navigation</strong>
+        <div class="grid-q">
+        ${questions.map((qq, idx) => {
+          const answered = state.answers[qq.id] && state.answers[qq.id].length > 0;
+          const isReviewed = state.review.includes(qq.id);
+          const curClass = idx === state.currentIndex ? 'current' : (answered ? 'answered' : isReviewed ? 'review' : '');
+          const reviewMark = isReviewed ? ' 🔍' : '';
+          return `<div class="qbox ${curClass}" onclick="goTo(${idx})">${idx + 1}${reviewMark}</div>`;
+        }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResults() {
+  let correct = 0;
+  questions.forEach(q => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    const isCorrect = user.length === corr.length && user.every(a => corr.includes(a));
+    if (isCorrect) correct++;
+  });
+  const pct = Math.round((correct / questions.length) * 100);
+  const timeTaken = 5400 - state.timeLeft;
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  return `
+    <div>
+      <div class="card center" style="margin-bottom:12px">
+        <h1>Exam Results</h1>
+        <div style="font-size:44px;font-weight:800;color:var(--orange)">${pct}%</div>
+        <h2 style="color:#111;margin-top:8px">${grade}</h2>
+        <div style="margin-top:6px">${correct} out of ${questions.length} correct</div>
+        <div style="margin-top:12px">
+          <button class="btn-primary" onclick="showCertificate()">View Certificate</button>
+        </div>
+      </div>
+      <div class="results" style="margin-bottom:12px">
+        <div class="card center">
+          <div style="font-size:32px;color:green;font-weight:700">${correct}</div>
+          <div>Correct</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:32px;color:red;font-weight:700">${questions.length - correct}</div>
+          <div>Incorrect</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:20px;font-weight:700">${formatTime(timeTaken)}</div>
+          <div>Time Taken</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>All Questions - Review & Explanations</h3>
+        ${questions.map(q => {
+          const user = state.answers[q.id] || [];
+          const isCorrect = user.length === q.correct.length && user.every(a => q.correct.includes(a));
+          const borderColor = isCorrect ? '#bbf7d0' : '#fecaca';
+          return `
+            <div style="border-left:4px solid ${borderColor};padding:12px;margin-top:12px">
+              <div style="font-weight:700">Question ${q.id} — <small>${q.section}</small> — <span style="color:${isCorrect ? 'green' : 'red'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></div>
+              <div style="margin-top:8px"><strong>${q.question}</strong></div>
+              <div style="margin-top:8px">
+                ${q.options.map((opt, idx) => {
+                  const isCorrect = q.correct.includes(idx);
+                  const isUser = user.includes(idx);
+                  const mark = isCorrect ? '✔️' : (isUser && !isCorrect ? '❌' : '');
+                  const bg = isCorrect ? 'background:#ecfccb;border:1px solid #bbf7d0;padding:8px;border-radius:6px;margin-bottom:6px;' 
+                            : (isUser ? 'background:#fff1f2;border:1px solid #fecaca;padding:8px;border-radius:6px;margin-bottom:6px;' : 'padding:8px;border-radius:6px;margin-bottom:6px;border:1px solid #eee;');
+                  return `<div style="${bg}">${mark} ${opt}</div>`;
+                }).join('')}
+              </div>
+              <div class="explain"><strong>Explanation:</strong> <div>${q.explanation}</div></div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCertificate() {
+  const correct = questions.reduce((acc, q) => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    return acc + (user.length === corr.length && user.every(a => corr.includes(a)) ? 1 : 0);
+  }, 0);
+  const pct = Math.round((correct / questions.length) * 100);
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return `
+    <div class="certificate-card">
+      <img src="https://www.uipath.com/hubfs/brand-guidelines/UiPath-Logo-Primary-RGB.png" alt="UiPath Logo" class="certificate-logo">
+      <div class="certificate-title">Certificate of Achievement</div>
+      <div class="certificate-subtitle">UiPath Agentic Automation Associate Mock Test 2</div>
+      <div class="certificate-text">This certifies that</div>
+      <div class="certificate-name">${state.userName || 'Candidate'}</div>
+      <div class="certificate-text">has successfully completed the mock exam with a score of</div>
+      <div class="certificate-name">${pct}%</div>
+      <div class="certificate-text">Grade: ${grade}</div>
+      <div class="certificate-date">Issued on ${date}</div>
+      <div style="margin-top:20px">
+        <button class="btn-primary" onclick="backToResults()">Back to Results</button>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (!state.examStarted) {
+    app.innerHTML = renderStart();
+    return;
+  }
+  if (state.showCertificate) {
+    app.innerHTML = renderCertificate();
+    return;
+  }
+  if (state.showResults) {
+    app.innerHTML = renderResults();
+    return;
+  }
+  app.innerHTML = renderQuestion();
+}
+
+function beginExam() {
+  const userNameInput = document.getElementById('userName');
+  const userName = userNameInput ? userNameInput.value.trim() : '';
+  if (!userName) {
+    state.userNameError = 'Please enter your name to start the exam.';
+    render();
+    return;
+  }
+  state.userName = userName;
+  state.userNameError = '';
+  state.examStarted = true;
+  state.timeLeft = 5400;
+  startTimer();
+  render();
+}
+
+function toggleAnswer(qid, optIdx) {
+  const q = questions.find(x => x.id === qid);
+  const cur = state.answers[qid] || [];
+  if (q.multiSelect) {
+    if (cur.includes(optIdx)) {
+      state.answers[qid] = cur.filter(i => i !== optIdx);
+    } else {
+      state.answers[qid] = [...cur, optIdx];
+    }
+  } else {
+    state.answers[qid] = [optIdx];
+  }
+  render();
+}
+
+function toggleReview(qid) {
+  if (state.review.includes(qid)) {
+    state.review = state.review.filter(id => id !== qid);
+  } else {
+    state.review = [...state.review, qid];
+  }
+  render();
+}
+
+function prevQ() { state.currentIndex = Math.max(0, state.currentIndex - 1); render(); }
+function nextQ() { state.currentIndex = Math.min(questions.length - 1, state.currentIndex + 1); render(); }
+function goTo(i) { state.currentIndex = i; render(); }
+
+function showCertificate() {
+  state.showCertificate = true;
+  render();
+}
+
+function backToResults() {
+  state.showCertificate = false;
+  render();
+}
+
+function submitExam() {
+  if (state.review.length > 0) {
+    const reviewQuestions = state.review.map(id => id).join(', ');
+    const confirmSubmit = window.confirm(`The following questions are marked for review: ${reviewQuestions}. Do you want to review them before submitting? Click 'Cancel' to review, or 'OK' to submit.`);
+    if (!confirmSubmit) {
+      const firstReviewId = state.review[0];
+      state.currentIndex = questions.findIndex(q => q.id === firstReviewId);
+      render();
+      return;
+    }
+  }
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.showResults = true;
+  render();
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UiPath Agentic Automation - Mock Exam (Static HTML)</title>
+<style>
+  :root{--orange:#f97316;--gray:#6b7280;--bg1:#fff7ed;}
+  body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:linear-gradient(180deg,#fff7ed 0%, #fff 100%); color:#111;}
+  .container{max-width:1100px;margin:32px auto;padding:20px;}
+  .card{background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);padding:20px;}
+  .center{text-align:center;}
+  h1{font-size:28px;margin:8px 0;}
+  h2{font-size:18px;color:var(--orange);margin:0;}
+  button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;font-weight:600;}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-ghost{background:#f3f4f6;color:#111;border:1px solid #e5e7eb;}
+  .info-list{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;}
+  .info-item{flex:1;min-width:180px;background:#fffbeb;padding:12px;border-radius:8px;}
+  .timer{font-size:20px;font-weight:700;color:var(--orange);}
+  .progress-bar{height:10px;background:#e6e6e6;border-radius:10px;overflow:hidden;margin:12px 0;}
+  .progress{height:10px;background:linear-gradient(90deg,var(--orange),#fb923c);width:0%;}
+  .question-title{font-size:20px;margin:12px 0 8px;}
+  .option{border:1px solid #e5e7eb;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .option.selected{background:#fff7ed;border-color:var(--orange);}
+  .nav{display:flex;justify-content:space-between;margin-top:12px;}
+  .grid-q{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-top:12px;}
+  .qbox{padding:8px;border-radius:6px;text-align:center;border:1px solid #e5e7eb;}
+  .qbox.answered{background:#34d399;color:#fff;}
+  .qbox.review{background:#fde68a;color:#111;}
+  .qbox.current{background:var(--orange);color:#fff;}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  pre{white-space:pre-wrap;}
+  .explain{background:#f0f9ff;border-left:4px solid #60a5fa;padding:12px;border-radius:6px;margin-top:8px;}
+  .badge{display:inline-block;background:#fde68a;padding:4px 8px;border-radius:999px;font-weight:700;}
+  .certificate-card{border: 4px solid #f97316; padding: 40px; background: #fff; max-width: 800px; margin: 40px auto; text-align: center; font-family: 'Times New Roman', serif;}
+  .certificate-title{font-size: 36px; color: #111; margin-bottom: 20px;}
+  .certificate-subtitle{font-size: 24px; color: #f97316; margin-bottom: 20px;}
+  .certificate-text{font-size: 18px; margin: 10px 0;}
+  .certificate-name{font-size: 28px; font-weight: bold; color: #111; margin: 20px 0;}
+  .certificate-date{font-size: 16px; color: #6b7280;}
+  .certificate-logo{width: 150px; margin-bottom: 20px;}
+  .input-field{padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; width: 300px; margin: 12px 0;}
+  .error-message{color: red; font-size: 14px; margin-bottom: 12px;}
+  .review-checkbox{margin-top:12px;display:flex;align-items:center;gap:8px;}
+  @media (max-width:700px){.grid-q{grid-template-columns:repeat(6,1fr);} h1{font-size:20px} .certificate-title{font-size:28px;} .certificate-subtitle{font-size:20px;} .input-field{width: 100%;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="app"></div>
+</div>
+
+<script>
+// Questions data (all 45 questions restored)
+const questions = [
+  {"id":1,"section":"Introduction to Agentic Automation","question":"What is the primary characteristic that distinguishes agentic automation from traditional RPA?","options":["Agentic automation uses attended robots only","Agentic automation can make autonomous decisions and adapt to changing conditions","Agentic automation is faster than traditional RPA","Agentic automation doesn't require any human oversight"],"correct":[1],"multiSelect":false,"explanation":"Agentic automation's key differentiator is its ability to make autonomous decisions and adapt to changing conditions using AI, unlike traditional RPA which follows pre-programmed rules."},
+  {"id":2,"section":"Introduction to Agentic Automation","question":"In the context of UiPath agentic automation, what is an 'agent'?","options":["A human worker who supervises automation","An AI-powered entity that can perceive, reason, and act autonomously to achieve goals","A traditional robot that follows pre-programmed rules","A software license manager"],"correct":[1],"multiSelect":false,"explanation":"An agent in UiPath is an AI-powered entity with perception, reasoning, and autonomous action capabilities to achieve defined goals."},
+  {"id":3,"section":"Introduction to Agentic Automation","question":"Which of the following are key capabilities of agentic automation? (Select ALL that apply)","options":["Learning from interactions and outcomes","Making decisions based on context","Operating only with explicit instructions","Handling ambiguous or unstructured inputs","Requiring complete reprogramming for new scenarios"],"correct":[0,1,3],"multiSelect":true,"explanation":"Key capabilities include learning from interactions, context-based decision making, and handling ambiguous inputs. Agentic automation does NOT require explicit instructions or complete reprogramming."},
+  {"id":4,"section":"Introduction to Agentic Automation","question":"What role does Generative AI play in agentic automation?","options":["It replaces all traditional automation activities","It enables agents to understand natural language, generate responses, and create content","It is only used for image processing","It eliminates the need for evaluation and testing"],"correct":[1],"multiSelect":false,"explanation":"Generative AI empowers agents with natural language understanding, response generation, and content creation capabilities, complementing traditional automation."},
+  {"id":5,"section":"Introduction to Agentic Automation","question":"In UiPath's agentic automation framework, what is the relationship between humans, robots, and AI agents?","options":["They work independently without interaction","AI agents replace both humans and robots","They collaborate in a complementary manner, each handling tasks suited to their strengths","Humans are completely removed from the process"],"correct":[2],"multiSelect":false,"explanation":"UiPath promotes a collaborative approach where humans, robots, and AI agents work together, each contributing their unique strengths to the automation ecosystem."},
+  {"id":6,"section":"Introduction to Agentic Automation","question":"Which UiPath platform is primarily used for building agentic automation solutions?","options":["UiPath Studio Desktop only","UiPath Studio Web","UiPath Assistant","UiPath Orchestrator only"],"correct":[1],"multiSelect":false,"explanation":"UiPath Studio Web is the primary platform for building agentic automation solutions, offering cloud-based development with AI capabilities."},
+  {"id":7,"section":"Introduction to Agentic Automation","question":"What is meant by 'human-in-the-loop' in agentic automation?","options":["Humans build all automation workflows manually","Humans provide oversight, handle escalations, and make critical decisions when needed","Humans monitor every single action taken by agents","Humans replace AI agents when they fail"],"correct":[1],"multiSelect":false,"explanation":"Human-in-the-loop means humans provide strategic oversight, handle escalations, and make critical decisions, ensuring responsible AI deployment."},
+  {"id":8,"section":"Introduction to Agentic Automation","question":"Which of the following scenarios is BEST suited for agentic automation?","options":["Processing structured invoices with fixed formats","Responding to customer inquiries with varied contexts and questions","Clicking buttons in a specific sequence","Data entry from Excel to SAP"],"correct":[1],"multiSelect":false,"explanation":"Agentic automation excels at handling varied, context-dependent scenarios like customer inquiries, while traditional RPA is better for structured, repetitive tasks."},
+  {"id":9,"section":"Introduction to Agentic Automation","question":"What is the primary advantage of using agentic automation for business processes?","options":["It's always cheaper than traditional automation","It eliminates all human workers","It can handle variability, ambiguity, and adapt to new situations without reprogramming","It processes data faster than any other method"],"correct":[2],"multiSelect":false,"explanation":"The primary advantage is adaptability - agentic automation handles variability and ambiguity without requiring reprogramming for each new scenario."},
+  {"id":10,"section":"Building Agents with Studio Web","question":"What are the two primary methods to create agents in UiPath Studio Web?","options":["Manual coding and Script recording","Autopilot and building from scratch","Import from Desktop and Cloud migration","Template selection and Workflow designer"],"correct":[1],"multiSelect":false,"explanation":"UiPath Studio Web offers two methods: Autopilot (AI-assisted creation) and building from scratch (manual configuration)."},
+  {"id":11,"section":"Building Agents with Studio Web","question":"When using Autopilot to create an agent, what information must you provide?","options":["Complete code for the agent","Natural language description of what the agent should do","Pre-built workflow files","Database connection strings"],"correct":[1],"multiSelect":false,"explanation":"Autopilot uses natural language descriptions to automatically generate agents, making it accessible to non-technical users."},
+  {"id":12,"section":"Building Agents with Studio Web","question":"What are the core components of an agent in UiPath Studio Web? (Select ALL that apply)","options":["Tools","Prompts","Context","Selectors","Workflows"],"correct":[0,1,2],"multiSelect":true,"explanation":"The three core components are Tools (capabilities), Prompts (instructions), and Context (relevant information). Selectors are for UI automation, workflows are traditional RPA components."},
+  {"id":13,"section":"Building Agents with Studio Web","question":"In the context of agents, what is a 'tool'?","options":["A hardware device used by the agent","A capability or function that an agent can execute to perform actions","A debugging utility","A version control system"],"correct":[1],"multiSelect":false,"explanation":"Tools are capabilities or functions that agents can execute, such as sending emails, searching the web, or processing documents."},
+  {"id":14,"section":"Building Agents with Studio Web","question":"Which of the following are valid tools that can be assigned to an agent? (Select ALL that apply)","options":["Send Email","Web Search","Data extraction from documents","Mathematical calculations","Record video"],"correct":[0,1,2,3],"multiSelect":true,"explanation":"Valid agent tools include Send Email, Web Search, Document extraction, and Mathematical calculations. Video recording is not a standard agent tool."},
+  {"id":15,"section":"Building Agents with Studio Web","question":"What is the purpose of the agent's system prompt?","options":["To store user credentials","To define the agent's behavior, personality, and guidelines for responses","To execute workflows","To configure orchestrator settings"],"correct":[1],"multiSelect":false,"explanation":"System prompts define how the agent behaves, its personality, and the guidelines it follows when generating responses."},
+  {"id":16,"section":"Building Agents with Studio Web","question":"When building an agent from scratch (without Autopilot), what is the correct sequence of steps?","options":["Add tools → Define prompt → Configure context → Test","Configure context → Add tools → Define prompt → Test","Test → Add tools → Define prompt → Configure context","Define prompt → Add tools → Configure context → Test"],"correct":[3],"multiSelect":false,"explanation":"Best practice is to first define the prompt (what the agent should do), add necessary tools, configure context, then test the agent."},
+  {"id":17,"section":"Building Agents with Studio Web","question":"In UiPath Studio Web, how do you test an agent during development?","options":["Deploy to Orchestrator first","Use the built-in Agent Tester panel","Export to Production environment","Create a separate testing robot"],"correct":[1],"multiSelect":false,"explanation":"Studio Web provides a built-in Agent Tester panel for immediate testing during development without deployment."},
+  {"id":18,"section":"Building Agents with Studio Web","question":"What happens when an agent doesn't have the appropriate tool to complete a requested task?","options":["The agent will crash","The agent may indicate it cannot perform the task or will try to improvise with available tools","The agent automatically requests more tools from Orchestrator","The agent shuts down permanently"],"correct":[1],"multiSelect":false,"explanation":"Without the right tool, an agent will communicate its limitations or attempt to use available tools creatively, but won't crash or shut down."},
+  {"id":19,"section":"Building Agents with Studio Web","question":"Which statement about agent scoring is TRUE?","options":["Agents cannot be scored during the build phase","Agent scoring helps evaluate response quality and accuracy","Scoring is only done by end users","Scoring replaces the need for testing"],"correct":[1],"multiSelect":false,"explanation":"Agent scoring is a critical evaluation mechanism to assess response quality and accuracy throughout the development lifecycle."},
+  {"id":20,"section":"Building Agents with Studio Web","question":"When creating a transcript processing agent, which tool would be MOST appropriate?","options":["Start Job","Document Understanding activities","Send Email","Delay"],"correct":[1],"multiSelect":false,"explanation":"Document Understanding activities are specifically designed for extracting and processing information from documents like transcripts."},
+  {"id":21,"section":"Agentic Prompt Engineering","question":"What is prompt engineering in the context of agentic automation?","options":["Writing code for automation workflows","Designing and optimizing text instructions to guide AI agent behavior and outputs","Creating hardware specifications","Debugging runtime errors"],"correct":[1],"multiSelect":false,"explanation":"Prompt engineering is the practice of designing and optimizing text instructions that guide how AI agents behave and generate outputs."},
+  {"id":22,"section":"Agentic Prompt Engineering","question":"What is a 'zero-shot' prompt?","options":["A prompt that requires no AI processing","A prompt that provides a task without examples, relying on the agent's pre-trained knowledge","A prompt that always fails","A prompt used for image processing only"],"correct":[1],"multiSelect":false,"explanation":"Zero-shot prompting provides a task without examples, relying entirely on the agent's pre-trained knowledge and understanding."},
+  {"id":23,"section":"Agentic Prompt Engineering","question":"What is a 'few-shot' prompt?","options":["A prompt limited to three words","A prompt that includes examples to help the agent understand the desired output format","A prompt used only for testing","A prompt that disables agent learning"],"correct":[1],"multiSelect":false,"explanation":"Few-shot prompting includes examples that demonstrate the desired output format or approach, improving agent understanding."},
+  {"id":24,"section":"Agentic Prompt Engineering","question":"Which prompting technique involves breaking down complex tasks into sequential reasoning steps?","options":["Zero-shot prompting","Negative prompting","Chain-of-thought prompting","Batch prompting"],"correct":[2],"multiSelect":false,"explanation":"Chain-of-thought prompting guides agents to break down complex problems into sequential reasoning steps for better results."},
+  {"id":25,"section":"Agentic Prompt Engineering","question":"What is the difference between a system prompt and a user prompt?","options":["System prompts are faster than user prompts","System prompts define agent behavior and guidelines; user prompts are specific requests from users","There is no difference","User prompts are permanent; system prompts change with each interaction"],"correct":[1],"multiSelect":false,"explanation":"System prompts set the agent's overall behavior and guidelines, while user prompts are specific task requests from individual users."},
+  {"id":26,"section":"Agentic Prompt Engineering","question":"Which of the following is a best practice for writing effective prompts? (Select ALL that apply)","options":["Be specific and clear about the desired output","Use ambiguous language to allow flexibility","Provide context and constraints","Include examples when appropriate","Make prompts as long as possible"],"correct":[0,2,3],"multiSelect":true,"explanation":"Effective prompts are specific, include context/constraints, and provide examples when needed. Ambiguity and excessive length reduce effectiveness."},
+  {"id":27,"section":"Agentic Prompt Engineering","question":"What is 'prompt health scoring'?","options":["A medical diagnostic tool","An evaluation metric to assess the quality and effectiveness of prompts","A security feature","A scheduling mechanism"],"correct":[1],"multiSelect":false,"explanation":"Prompt health scoring evaluates how well prompts are structured and how effectively they guide agent behavior."},
+  {"id":28,"section":"Agentic Prompt Engineering","question":"When should you use chain-of-thought prompting?","options":["For simple, straightforward tasks","When you want faster responses","For complex reasoning tasks that benefit from step-by-step problem solving","Only with image processing"],"correct":[2],"multiSelect":false,"explanation":"Chain-of-thought is best for complex reasoning tasks where step-by-step problem decomposition improves accuracy."},
+  {"id":29,"section":"Agentic Prompt Engineering","question":"What is the purpose of providing constraints in a prompt?","options":["To make the agent work slower","To limit and guide the agent's responses within acceptable boundaries","To reduce the agent's capabilities","To increase processing costs"],"correct":[1],"multiSelect":false,"explanation":"Constraints guide agents to produce responses within acceptable boundaries, ensuring quality and appropriateness."},
+  {"id":30,"section":"Agentic Prompt Engineering","question":"Which prompt would be MORE effective for an email classification agent?","options":["Classify this email","Read and classify this email into categories: Urgent, Normal, or Low Priority based on keywords, sender, and content. For Urgent: look for words like 'ASAP', 'urgent', 'immediate'. Respond in JSON format.","Email classification","Process this"],"correct":[1],"multiSelect":false,"explanation":"The detailed prompt provides clear categories, criteria, examples, and output format - all best practices for effective prompting."},
+  {"id":31,"section":"Configuring Context and Escalations","question":"What is 'grounding' in the context of agentic automation?","options":["Physically connecting hardware","Providing agents with specific, relevant information to base their responses on","Shutting down misbehaving agents","Testing in production environments"],"correct":[1],"multiSelect":false,"explanation":"Grounding provides agents with specific, relevant information to ensure responses are based on accurate, contextual data."},
+  {"id":32,"section":"Configuring Context and Escalations","question":"What is a Storage Bucket in UiPath, and how is it used with agents?","options":["A physical storage device","A cloud-based storage location where agents can access files and documents for context","A debugging container","A backup system only"],"correct":[1],"multiSelect":false,"explanation":"Storage Buckets are cloud storage locations that provide agents with access to files and documents needed for context."},
+  {"id":33,"section":"Configuring Context and Escalations","question":"Why is providing context important for agents?","options":["It makes agents slower","It grounds responses in accurate, business-specific information and reduces hallucinations","It's only needed for compliance","It increases licensing costs"],"correct":[1],"multiSelect":false,"explanation":"Context ensures agents provide accurate, business-specific responses and significantly reduces AI hallucinations."},
+  {"id":34,"section":"Configuring Context and Escalations","question":"What is UiPath Action Center used for in agentic automation?","options":["Performance monitoring only","Creating escalation workflows where agents can hand off tasks to humans for review or decision-making","Storing automation logs","Managing robot licenses"],"correct":[1],"multiSelect":false,"explanation":"Action Center enables human-in-the-loop workflows where agents can escalate tasks requiring human judgment or approval."},
+  {"id":35,"section":"Configuring Context and Escalations","question":"Which of the following represents a valid escalation scenario? (Select ALL that apply)","options":["Agent encounters a request outside its scope of authority","Agent needs human judgment on an ambiguous case","Agent successfully completes a routine task","Agent's confidence score falls below a threshold","Agent is processing faster than expected"],"correct":[0,1,3],"multiSelect":true,"explanation":"Valid escalations occur when agents encounter scope limitations, ambiguous cases, or low confidence scores. Successful routine tasks don't require escalation."},
+  {"id":36,"section":"Configuring Context and Escalations","question":"In a multi-agent flow, what is the typical design pattern?","options":["All agents work simultaneously on the same task","Agents work sequentially or in parallel, each handling specialized tasks, with coordination and handoffs","Only one agent can run at a time","Agents compete for tasks"],"correct":[1],"multiSelect":false,"explanation":"Multi-agent flows coordinate specialized agents working sequentially or in parallel, with proper handoffs between agents."},
+  {"id":37,"section":"Configuring Context and Escalations","question":"How can you configure an agent to escalate to a human when uncertain?","options":["Agents cannot detect uncertainty","Use confidence thresholds and conditional logic to trigger Action Center tasks","All decisions must be escalated","Manual intervention is not possible"],"correct":[1],"multiSelect":false,"explanation":"Confidence thresholds and conditional logic can automatically trigger Action Center tasks for human review when needed."},
+  {"id":38,"section":"Configuring Context and Escalations","question":"What type of information should be included in agent context? (Select ALL that apply)","options":["Relevant business policies and procedures","Product information and knowledge bases","Random internet data","Historical examples and FAQs","Personal passwords"],"correct":[0,1,3],"multiSelect":true,"explanation":"Context should include relevant business information, product details, and historical examples. Never include sensitive data like passwords or random internet content."},
+  {"id":39,"section":"Configuring Evaluations for Agents","question":"What is an 'evaluation set' in the context of agent testing?","options":["A set of hardware components","A collection of test inputs and expected outputs used to measure agent performance","A group of developers","A licensing package"],"correct":[1],"multiSelect":false,"explanation":"An evaluation set is a curated collection of test cases with inputs and expected outputs for measuring agent performance."},
+  {"id":40,"section":"Configuring Evaluations for Agents","question":"Which of the following are valid evaluation methods for agents? (Select ALL that apply)","options":["LLM-as-a-Judge","Exact Match","JSON Similarity","Color matching","Manual code review"],"correct":[0,1,2],"multiSelect":true,"explanation":"Valid methods include LLM-as-a-Judge (AI-powered evaluation), Exact Match (precise comparison), and JSON Similarity (structure comparison)."},
+  {"id":41,"section":"Configuring Evaluations for Agents","question":"What is 'LLM-as-a-Judge' evaluation?","options":["A legal review process","Using a large language model to evaluate the quality of another agent's responses","A human review panel","A hardware testing method"],"correct":[1],"multiSelect":false,"explanation":"LLM-as-a-Judge uses an AI language model to evaluate the quality, accuracy, and appropriateness of agent responses."},
+  {"id":42,"section":"Configuring Evaluations for Agents","question":"When would you use 'Exact Match' as an evaluation method?","options":["When responses can have creative variations","When you need precise, character-for-character identical responses","For all agent evaluations","Only for image comparisons"],"correct":[1],"multiSelect":false,"explanation":"Exact Match is used when responses must be precisely identical, such as specific codes, IDs, or formatted data."},
+  {"id":43,"section":"Configuring Evaluations for Agents","question":"What is the purpose of JSON Similarity evaluation?","options":["To compare file sizes","To assess how closely an agent's JSON output matches the expected structure and values","To validate code syntax","To measure response time"],"correct":[1],"multiSelect":false,"explanation":"JSON Similarity evaluates whether agent outputs match expected JSON structure and values, useful for API integrations."},
+  {"id":44,"section":"Configuring Evaluations for Agents","question":"Why is continuous evaluation important for agents in production?","options":["It's not important; one-time testing is sufficient","To monitor performance, detect drift, and ensure agents maintain quality over time","To increase costs","To slow down processing"],"correct":[1],"multiSelect":false,"explanation":"Continuous evaluation monitors agent performance, detects model drift, and ensures consistent quality in production environments."},
+  {"id":45,"section":"Configuring Evaluations for Agents","question":"What metrics should be tracked to ensure agent enterprise readiness? (Select ALL that apply)","options":["Accuracy and correctness of responses","Response time and performance","Escalation rates","Developer's favorite color","User satisfaction scores"],"correct":[0,1,2,4],"multiSelect":true,"explanation":"Enterprise readiness requires tracking accuracy, performance, escalation rates, and user satisfaction. Personal preferences are irrelevant."}
+];
+
+let state = {
+  examStarted: false,
+  currentIndex: 0,
+  answers: {}, // id -> array of selected option indexes
+  review: [], // array of question IDs marked for review
+  timeLeft: 3600,
+  timerInterval: null,
+  showResults: false,
+  showCertificate: false,
+  userName: '',
+  userNameError: ''
+};
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    if (state.timeLeft > 0) {
+      state.timeLeft--;
+      render();
+    } else {
+      submitExam();
+    }
+  }, 1000);
+}
+
+function renderStart() {
+  return `
+    <div class="card center">
+      <div style="display:flex;justify-content:center;margin-bottom:8px">
+        <div style="background:var(--orange);color:#fff;border-radius:999px;padding:18px;font-size:28px;">🏆</div>
+      </div>
+      <h1>UiPath Agentic Automation Associate</h1>
+      <h2>Certification Mock Exam</h2>
+      <div style="margin-top:18px">
+        <label for="userName" style="font-weight:600">Enter Your Name:</label>
+        <div><input type="text" id="userName" class="input-field" placeholder="Your Name" value="${state.userName}"></div>
+        ${state.userNameError ? `<div class="error-message">${state.userNameError}</div>` : ''}
+      </div>
+      <div style="margin-top:18px" class="info-list">
+        <div class="info-item"><strong>Total Questions:</strong><div style="margin-top:6px">45</div></div>
+        <div class="info-item"><strong>Duration:</strong><div style="margin-top:6px">60 minutes</div></div>
+        <div class="info-item"><strong>Passing Score:</strong><div style="margin-top:6px">70% (32 correct)</div></div>
+        <div class="info-item"><strong>Question Types:</strong><div style="margin-top:6px">Single and Multiple Select</div></div>
+      </div>
+      <div style="margin-top:18px;text-align:left;">
+        <strong>Important Instructions:</strong>
+        <ul>
+          <li>Read each question carefully before selecting your answer</li>
+          <li>Some questions require multiple selections - look for "Select ALL that apply"</li>
+          <li>You can navigate between questions using Previous/Next buttons</li>
+          <li>Use the 'Mark for Review' checkbox to flag questions for later review</li>
+          <li>A timer will run throughout the exam</li>
+          <li>Review your answers before final submission</li>
+        </ul>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-primary" onclick="beginExam()">Start Exam</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuestion() {
+  const q = questions[state.currentIndex];
+  const userAns = state.answers[q.id] || [];
+  const isReviewed = state.review.includes(q.id);
+  const progressPct = Math.round(((state.currentIndex + 1) / questions.length) * 100);
+  const optionsHtml = q.options.map((opt, idx) => {
+    const sel = userAns.includes(idx) ? 'selected' : '';
+    return `<div class="option ${sel}" onclick="toggleAnswer(${q.id}, ${idx})">
+      <div style="width:18px;height:18px;border-radius:999px;border:2px solid ${sel ? 'var(--orange)' : '#cbd5e1'};display:inline-block;margin-right:8px;${sel ? 'background:var(--orange)' : ''}"></div>
+      <div style="flex:1">${opt}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="timer">${formatTime(state.timeLeft)}</div>
+          <div style="font-weight:700;color:var(--gray)">Question ${state.currentIndex + 1} of ${questions.length}</div>
+        </div>
+        <div><button class="btn-primary" onclick="submitExam()">Submit Exam</button></div>
+      </div>
+      <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
+      <div style="margin-top:12px">
+        <div class="badge">${q.section}</div>
+      </div>
+      <h3 class="question-title">${q.question}</h3>
+      ${q.multiSelect ? `<div style="background:#eff6ff;padding:8px;border-left:4px solid #60a5fa;border-radius:6px;margin-bottom:12px">Select ALL that apply - Multiple answers required</div>` : ''}
+      <div>${optionsHtml}</div>
+      <div class="review-checkbox">
+        <input type="checkbox" id="review-${q.id}" ${isReviewed ? 'checked' : ''} onclick="toggleReview(${q.id})">
+        <label for="review-${q.id}">Mark for Review</label>
+      </div>
+      <div class="nav">
+        <div>
+          <button onclick="prevQ()" class="btn-ghost" ${state.currentIndex === 0 ? 'disabled' : ''}>Previous</button>
+        </div>
+        <div>
+          <button onclick="nextQ()" class="btn-primary" ${state.currentIndex === questions.length - 1 ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <strong>Question Navigation</strong>
+        <div class="grid-q">
+        ${questions.map((qq, idx) => {
+          const answered = state.answers[qq.id] && state.answers[qq.id].length > 0;
+          const isReviewed = state.review.includes(qq.id);
+          const curClass = idx === state.currentIndex ? 'current' : (answered ? 'answered' : isReviewed ? 'review' : '');
+          const reviewMark = isReviewed ? ' 🔍' : '';
+          return `<div class="qbox ${curClass}" onclick="goTo(${idx})">${idx + 1}${reviewMark}</div>`;
+        }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResults() {
+  let correct = 0;
+  questions.forEach(q => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    const isCorrect = user.length === corr.length && user.every(a => corr.includes(a));
+    if (isCorrect) correct++;
+  });
+  const pct = Math.round((correct / questions.length) * 100);
+  const timeTaken = 3600 - state.timeLeft;
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  return `
+    <div>
+      <div class="card center" style="margin-bottom:12px">
+        <h1>Exam Results</h1>
+        <div style="font-size:44px;font-weight:800;color:var(--orange)">${pct}%</div>
+        <h2 style="color:#111;margin-top:8px">${grade}</h2>
+        <div style="margin-top:6px">${correct} out of ${questions.length} correct</div>
+        <div style="margin-top:12px">
+          <button class="btn-primary" onclick="showCertificate()">View Certificate</button>
+        </div>
+      </div>
+      <div class="results" style="margin-bottom:12px">
+        <div class="card center">
+          <div style="font-size:32px;color:green;font-weight:700">${correct}</div>
+          <div>Correct</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:32px;color:red;font-weight:700">${questions.length - correct}</div>
+          <div>Incorrect</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:20px;font-weight:700">${formatTime(timeTaken)}</div>
+          <div>Time Taken</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>All Questions - Review & Explanations</h3>
+        ${questions.map(q => {
+          const user = state.answers[q.id] || [];
+          const isCorrect = user.length === q.correct.length && user.every(a => q.correct.includes(a));
+          const borderColor = isCorrect ? '#bbf7d0' : '#fecaca';
+          return `
+            <div style="border-left:4px solid ${borderColor};padding:12px;margin-top:12px">
+              <div style="font-weight:700">Question ${q.id} — <small>${q.section}</small> — <span style="color:${isCorrect ? 'green' : 'red'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></div>
+              <div style="margin-top:8px"><strong>${q.question}</strong></div>
+              <div style="margin-top:8px">
+                ${q.options.map((opt, idx) => {
+                  const isCorrect = q.correct.includes(idx);
+                  const isUser = user.includes(idx);
+                  const mark = isCorrect ? '✔️' : (isUser && !isCorrect ? '❌' : '');
+                  const bg = isCorrect ? 'background:#ecfccb;border:1px solid #bbf7d0;padding:8px;border-radius:6px;margin-bottom:6px;' 
+                            : (isUser ? 'background:#fff1f2;border:1px solid #fecaca;padding:8px;border-radius:6px;margin-bottom:6px;' : 'padding:8px;border-radius:6px;margin-bottom:6px;border:1px solid #eee;');
+                  return `<div style="${bg}">${mark} ${opt}</div>`;
+                }).join('')}
+              </div>
+              <div class="explain"><strong>Explanation:</strong> <div>${q.explanation}</div></div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCertificate() {
+  const correct = questions.reduce((acc, q) => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    return acc + (user.length === corr.length && user.every(a => corr.includes(a)) ? 1 : 0);
+  }, 0);
+  const pct = Math.round((correct / questions.length) * 100);
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return `
+    <div class="certificate-card">
+      <img src="https://www.uipath.com/hubfs/brand-guidelines/UiPath-Logo-Primary-RGB.png" alt="UiPath Logo" class="certificate-logo">
+      <div class="certificate-title">Certificate of Achievement</div>
+      <div class="certificate-subtitle">UiPath Agentic Automation Associate Mock Exam</div>
+      <div class="certificate-text">This certifies that</div>
+      <div class="certificate-name">${state.userName || 'Candidate'}</div>
+      <div class="certificate-text">has successfully completed the mock exam with a score of</div>
+      <div class="certificate-name">${pct}%</div>
+      <div class="certificate-text">Grade: ${grade}</div>
+      <div class="certificate-date">Issued on ${date}</div>
+      <div style="margin-top:20px">
+        <button class="btn-primary" onclick="backToResults()">Back to Results</button>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (!state.examStarted) {
+    app.innerHTML = renderStart();
+    return;
+  }
+  if (state.showCertificate) {
+    app.innerHTML = renderCertificate();
+    return;
+  }
+  if (state.showResults) {
+    app.innerHTML = renderResults();
+    return;
+  }
+  app.innerHTML = renderQuestion();
+}
+
+function beginExam() {
+  const userNameInput = document.getElementById('userName');
+  const userName = userNameInput ? userNameInput.value.trim() : '';
+  if (!userName) {
+    state.userNameError = 'Please enter your name to start the exam.';
+    render();
+    return;
+  }
+  state.userName = userName;
+  state.userNameError = '';
+  state.examStarted = true;
+  state.timeLeft = 3600;
+  startTimer();
+  render();
+}
+
+function toggleAnswer(qid, optIdx) {
+  const q = questions.find(x => x.id === qid);
+  const cur = state.answers[qid] || [];
+  if (q.multiSelect) {
+    if (cur.includes(optIdx)) {
+      state.answers[qid] = cur.filter(i => i !== optIdx);
+    } else {
+      state.answers[qid] = [...cur, optIdx];
+    }
+  } else {
+    state.answers[qid] = [optIdx];
+  }
+  render();
+}
+
+function toggleReview(qid) {
+  if (state.review.includes(qid)) {
+    state.review = state.review.filter(id => id !== qid);
+  } else {
+    state.review = [...state.review, qid];
+  }
+  render();
+}
+
+function prevQ() { state.currentIndex = Math.max(0, state.currentIndex - 1); render(); }
+function nextQ() { state.currentIndex = Math.min(questions.length - 1, state.currentIndex + 1); render(); }
+function goTo(i) { state.currentIndex = i; render(); }
+
+function showCertificate() {
+  state.showCertificate = true;
+  render();
+}
+
+function backToResults() {
+  state.showCertificate = false;
+  render();
+}
+
+function submitExam() {
+  if (state.review.length > 0) {
+    const reviewQuestions = state.review.map(id => id).join(', ');
+    const confirmSubmit = window.confirm(`The following questions are marked for review: ${reviewQuestions}. Do you want to review them before submitting? Click 'Cancel' to review, or 'OK' to submit.`);
+    if (!confirmSubmit) {
+      const firstReviewId = state.review[0];
+      state.currentIndex = questions.findIndex(q => q.id === firstReviewId);
+      render();
+      return;
+    }
+  }
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.showResults = true;
+  render();
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
