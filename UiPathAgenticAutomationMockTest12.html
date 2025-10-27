@@ -1,0 +1,448 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UiPath Agentic Automation Mock Test 12</title>
+<style>
+  :root{--orange:#f97316;--gray:#6b7280;--bg1:#fff7ed;}
+  body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:linear-gradient(180deg,#fff7ed 0%, #fff 100%); color:#111;}
+  .container{max-width:1100px;margin:32px auto;padding:20px;}
+  .card{background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);padding:20px;}
+  .center{text-align:center;}
+  h1{font-size:28px;margin:8px 0;}
+  h2{font-size:18px;color:var(--orange);margin:0;}
+  button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;font-weight:600;}
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-ghost{background:#f3f4f6;color:#111;border:1px solid #e5e7eb;}
+  .info-list{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;}
+  .info-item{flex:1;min-width:180px;background:#fffbeb;padding:12px;border-radius:8px;}
+  .timer{font-size:20px;font-weight:700;color:var(--orange);}
+  .progress-bar{height:10px;background:#e6e6e6;border-radius:10px;overflow:hidden;margin:12px 0;}
+  .progress{height:10px;background:linear-gradient(90deg,var(--orange),#fb923c);width:0%;}
+  .question-title{font-size:20px;margin:12px 0 8px;}
+  .option{border:1px solid #e5e7eb;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .option.selected{background:#fff7ed;border-color:var(--orange);}
+  .nav{display:flex;justify-content:space-between;margin-top:12px;}
+  .grid-q{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-top:12px;}
+  .qbox{padding:8px;border-radius:6px;text-align:center;border:1px solid #e5e7eb;}
+  .qbox.answered{background:#34d399;color:#fff;}
+  .qbox.review{background:#fde68a;color:#111;}
+  .qbox.current{background:var(--orange);color:#fff;}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  pre{white-space:pre-wrap;}
+  .explain{background:#f0f9ff;border-left:4px solid #60a5fa;padding:12px;border-radius:6px;margin-top:8px;}
+  .badge{display:inline-block;background:#fde68a;padding:4px 8px;border-radius:999px;font-weight:700;}
+  .certificate-card{border: 4px solid #f97316; padding: 40px; background: #fff; max-width: 800px; margin: 40px auto; text-align: center; font-family: 'Times New Roman', serif;}
+  .certificate-title{font-size: 36px; color: #111; margin-bottom: 20px;}
+  .certificate-subtitle{font-size: 24px; color: #f97316; margin-bottom: 20px;}
+  .certificate-text{font-size: 18px; margin: 10px 0;}
+  .certificate-name{font-size: 28px; font-weight: bold; color: #111; margin: 20px 0;}
+  .certificate-date{font-size: 16px; color: #6b7280;}
+  .certificate-logo{width: 150px; margin-bottom: 20px;}
+  .input-field{padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; width: 300px; margin: 12px 0;}
+  .error-message{color: red; font-size: 14px; margin-bottom: 12px;}
+  .review-checkbox{margin-top:12px;display:flex;align-items:center;gap:8px;}
+  @media (max-width:700px){.grid-q{grid-template-columns:repeat(6,1fr);} h1{font-size:20px} .certificate-title{font-size:28px;} .certificate-subtitle{font-size:20px;} .input-field{width: 100%;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="app"></div>
+</div>
+
+<script>
+// Questions data for Mock Test 12 (45 new questions)
+const questions = [
+  {"id":1,"section":"Agentic AI and agentic automation concepts","question":"Differentiate between ML and LLMs.","options":["ML is general learning; LLMs are language-specific","Both same","ML is language; LLMs general","No difference"],"correct":[0],"multiSelect":false,"explanation":"ML is broad; LLMs focus on language."},
+  {"id":2,"section":"Agentic AI and agentic automation concepts","question":"A finance firm automates audits but needs flexibility for regulations. How does agentic improve?","options":["Rigid audits","AI for regulation adaptation","Manual audits","No flexibility"],"correct":[1],"multiSelect":false,"explanation":"Agentic AI adapts to regulations in audits."},
+  {"id":3,"section":"Agentic AI and agentic automation concepts","question":"Which agentic features for a retail inventory system? (Select ALL that apply)","options":["Decision-making","Adaptability","Goal execution","Coordination"],"correct":[0,1,2,3],"multiSelect":true,"explanation":"Features enhance inventory systems."},
+  {"id":4,"section":"Agentic discovery","question":"Knowledge context role in discovery.","options":["Assess suitability","Ignore","Cost only","Manual"],"correct":[0],"multiSelect":false,"explanation":"Context assesses process suitability."},
+  {"id":5,"section":"Agentic discovery","question":"In marketing with dynamic campaigns, story elements?","options":["All 5","Trigger only","Context only","Tools only"],"correct":[0],"multiSelect":false,"explanation":"All for dynamic campaigns."},
+  {"id":6,"section":"Agent blueprint design","question":"Agent goals for alignment.","options":["With business","No goals","Random","Manual"],"correct":[0],"multiSelect":false,"explanation":"Goals align with business."},
+  {"id":7,"section":"Agent blueprint design","question":"User prompts for tasks.","options":["Specific requests","General","Both","None"],"correct":[0],"multiSelect":false,"explanation":"User for specific tasks."},
+  {"id":8,"section":"Context Grounding","question":"Integration for data.","options":["External sources","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Integration for external data."},
+  {"id":9,"section":"Escalations","question":"Logic for escalations.","options":["Confidence thresholds","No logic","Always","Never"],"correct":[0],"multiSelect":false,"explanation":"Thresholds for escalations."},
+  {"id":10,"section":"Agentic evaluations","question":"Model-graded for complex.","options":["AI assessment","Rules","Manual","No"],"correct":[0],"multiSelect":false,"explanation":"Model for AI assessment."},
+  {"id":11,"section":"Prompt engineering","question":"Chain-of-thought for reasoning.","options":["Step-by-step","No steps","Random","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Chain for step-by-step reasoning."},
+  {"id":12,"section":"UiPath Platform components and integrations","question":"Map actions into prompts.","options":["For connectors","No map","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Map for connector actions."},
+  {"id":13,"section":"Agentic orchestration with UiPath Maestro","question":"BPMN for task mapping.","options":["Yes","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"BPMN for mapping."},
+  {"id":14,"section":"Autopilot for everyone","question":"For simple non-technical.","options":["Yes","Complex","Manual","Technical"],"correct":[0],"multiSelect":false,"explanation":"For simple non-technical."},
+  {"id":15,"section":"Agentic AI and agentic automation concepts","question":"Traditional for structured data.","options":["Yes","No","Unstructured","Both"],"correct":[0],"multiSelect":false,"explanation":"Traditional for structured."},
+  {"id":16,"section":"Agentic discovery","question":"Prioritize by criteria.","options":["Feasibility, impact","Ignore","Feasibility only","Impact only"],"correct":[0],"multiSelect":false,"explanation":"Criteria for prioritize."},
+  {"id":17,"section":"Agent blueprint design","question":"Differentiate prompts.","options":["System general; user specific","Both general","Both specific","No difference"],"correct":[0],"multiSelect":false,"explanation":"Differentiate prompts."},
+  {"id":18,"section":"Context Grounding","question":"Sources for grounding.","options":["Buckets, service","No sources","Email only","Web only"],"correct":[0],"multiSelect":false,"explanation":"Sources for grounding."},
+  {"id":19,"section":"Escalations","question":"HITL for balance.","options":["Yes","No","Replace","Increase"],"correct":[0],"multiSelect":false,"explanation":"HITL for balance."},
+  {"id":20,"section":"Agentic evaluations","question":"Deterministic for rules.","options":["Yes","No","AI","Manual"],"correct":[0],"multiSelect":false,"explanation":"Deterministic for rules."},
+  {"id":21,"section":"Prompt engineering","question":"Few-shot for guidance.","options":["With examples","No","Chain-of-thought","Constraints"],"correct":[0],"multiSelect":false,"explanation":"Few-shot with examples."},
+  {"id":22,"section":"UiPath Platform components and integrations","question":"Schema for interfaces.","options":["Input/output","No schema","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Schema for interfaces."},
+  {"id":23,"section":"Agentic orchestration with UiPath Maestro","question":"Tasks for workflows.","options":["Invoke","No","Manual","Email"],"correct":[0],"multiSelect":false,"explanation":"Tasks for workflows."},
+  {"id":24,"section":"Autopilot for everyone","question":"For language tasks.","options":["Natural","Coding","Manual","Technical"],"correct":[0],"multiSelect":false,"explanation":"For natural language."},
+  {"id":25,"section":"Agentic AI and agentic automation concepts","question":"Challenges include structured dependency.","options":["Yes","No","Unstructured","Both"],"correct":[0],"multiSelect":false,"explanation":"Structured dependency challenge."},
+  {"id":26,"section":"Agentic discovery","question":"Stories with characteristics.","options":["5","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"5 characteristics for stories."},
+  {"id":27,"section":"Agent blueprint design","question":"System for guidelines.","options":["Yes","No","Both","None"],"correct":[0],"multiSelect":false,"explanation":"System for guidelines."},
+  {"id":28,"section":"Context Grounding","question":"Describe use.","options":["For relevant data","Ignore","Manual","No"],"correct":[0],"multiSelect":false,"explanation":"Use for relevant data."},
+  {"id":29,"section":"Escalations","question":"Logic for raising.","options":["Thresholds","No","Always","Never"],"correct":[0],"multiSelect":false,"explanation":"Logic for raising."},
+  {"id":30,"section":"Agentic evaluations","question":"Differentiate types.","options":["Rules vs AI","Both rules","Both AI","No difference"],"correct":[0],"multiSelect":false,"explanation":"Types differentiated."},
+  {"id":31,"section":"Prompt engineering","question":"Best practices for specificity.","options":["Clarity, conciseness","Ambiguity","Long","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Practices for specificity."},
+  {"id":32,"section":"UiPath Platform components and integrations","question":"Create tools.","options":["In Studio Web","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Create in Studio Web."},
+  {"id":33,"section":"Agentic orchestration with UiPath Maestro","question":"Configure for invoke.","options":["'Start and wait'","Manual","No","Asynchronous"],"correct":[0],"multiSelect":false,"explanation":"Configure for invoke."},
+  {"id":34,"section":"Autopilot for everyone","question":"When for simple.","options":["Yes","Complex","Manual","Technical"],"correct":[0],"multiSelect":false,"explanation":"When for simple."},
+  {"id":35,"section":"Agentic AI and agentic automation concepts","question":"For unstructured handling.","options":["Agentic","Traditional","No","Manual"],"correct":[0],"multiSelect":false,"explanation":"Agentic for unstructured."},
+  {"id":36,"section":"Agentic discovery","question":"Assess for suitability.","options":["Roles, context","Ignore","Cost only","Manual"],"correct":[0],"multiSelect":false,"explanation":"Assess for suitability."},
+  {"id":37,"section":"Agent blueprint design","question":"User for tasks.","options":["Specific","General","Both","None"],"correct":[0],"multiSelect":false,"explanation":"User for tasks."},
+  {"id":38,"section":"Context Grounding","question":"Sources include service.","options":["Integration","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"Sources include service."},
+  {"id":39,"section":"Escalations","question":"For ambiguous.","options":["Escalate","No","Always","Never"],"correct":[0],"multiSelect":false,"explanation":"For ambiguous cases."},
+  {"id":40,"section":"Agentic evaluations","question":"Deterministic uses rules.","options":["Yes","No","AI","Manual"],"correct":[0],"multiSelect":false,"explanation":"Deterministic uses rules."},
+  {"id":41,"section":"Prompt engineering","question":"Zero-shot without examples.","options":["Instructions only","With examples","Chain-of-thought","Constraints"],"correct":[0],"multiSelect":false,"explanation":"Zero-shot without examples."},
+  {"id":42,"section":"UiPath Platform components and integrations","question":"For tool schema.","options":["Design input/output","No schema","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"For tool schema."},
+  {"id":43,"section":"Agentic orchestration with UiPath Maestro","question":"For process modeling.","options":["BPMN","No","Manual","Ignore"],"correct":[0],"multiSelect":false,"explanation":"BPMN for modeling."},
+  {"id":44,"section":"Autopilot for everyone","question":"For non-technical automation.","options":["Yes","Coding","Manual","Technical"],"correct":[0],"multiSelect":false,"explanation":"For non-technical automation."},
+  {"id":45,"section":"Agentic AI and agentic automation concepts","question":"Traditional for explicit instructions.","options":["High dependency","No dependency","Low dependency","No instructions"],"correct":[0],"multiSelect":false,"explanation":"Traditional has high dependency on explicit instructions."}
+];
+
+let state = {
+  examStarted: false,
+  currentIndex: 0,
+  answers: {}, // id -> array of selected option indexes
+  review: [], // array of question IDs marked for review
+  timeLeft: 5400, // 90 minutes
+  timerInterval: null,
+  showResults: false,
+  showCertificate: false,
+  userName: '',
+  userNameError: ''
+};
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    if (state.timeLeft > 0) {
+      state.timeLeft--;
+      render();
+    } else {
+      submitExam();
+    }
+  }, 1000);
+}
+
+function renderStart() {
+  return `
+    <div class="card center">
+      <div style="display:flex;justify-content:center;margin-bottom:8px">
+        <div style="background:var(--orange);color:#fff;border-radius:999px;padding:18px;font-size:28px;">🏆</div>
+      </div>
+      <h1>UiPath Agentic Automation Associate</h1>
+      <h2>Mock Test 12</h2>
+      <div style="margin-top:18px">
+        <label for="userName" style="font-weight:600">Enter Your Name:</label>
+        <div><input type="text" id="userName" class="input-field" placeholder="Your Name" value="${state.userName}"></div>
+        ${state.userNameError ? `<div class="error-message">${state.userNameError}</div>` : ''}
+      </div>
+      <div style="margin-top:18px" class="info-list">
+        <div class="info-item"><strong>Total Questions:</strong><div style="margin-top:6px">45</div></div>
+        <div class="info-item"><strong>Duration:</strong><div style="margin-top:6px">90 minutes</div></div>
+        <div class="info-item"><strong>Passing Score:</strong><div style="margin-top:6px">70% (32 correct)</div></div>
+        <div class="info-item"><strong>Question Types:</strong><div style="margin-top:6px">Single and Multiple Select</div></div>
+      </div>
+      <div style="margin-top:18px;text-align:left;">
+        <strong>Important Instructions:</strong>
+        <ul>
+          <li>Read each question carefully before selecting your answer</li>
+          <li>Some questions require multiple selections - look for "Select ALL that apply"</li>
+          <li>You can navigate between questions using Previous/Next buttons</li>
+          <li>Use the 'Mark for Review' checkbox to flag questions for later review</li>
+          <li>A timer will run throughout the exam</li>
+          <li>Review your answers before final submission</li>
+        </ul>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-primary" onclick="beginExam()">Start Exam</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuestion() {
+  const q = questions[state.currentIndex];
+  const userAns = state.answers[q.id] || [];
+  const isReviewed = state.review.includes(q.id);
+  const progressPct = Math.round(((state.currentIndex + 1) / questions.length) * 100);
+  const optionsHtml = q.options.map((opt, idx) => {
+    const sel = userAns.includes(idx) ? 'selected' : '';
+    return `<div class="option ${sel}" onclick="toggleAnswer(${q.id}, ${idx})">
+      <div style="width:18px;height:18px;border-radius:999px;border:2px solid ${sel ? 'var(--orange)' : '#cbd5e1'};display:inline-block;margin-right:8px;${sel ? 'background:var(--orange)' : ''}"></div>
+      <div style="flex:1">${opt}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="timer">${formatTime(state.timeLeft)}</div>
+          <div style="font-weight:700;color:var(--gray)">Question ${state.currentIndex + 1} of ${questions.length}</div>
+        </div>
+        <div><button class="btn-primary" onclick="submitExam()">Submit Exam</button></div>
+      </div>
+      <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
+      <div style="margin-top:12px">
+        <div class="badge">${q.section}</div>
+      </div>
+      <h3 class="question-title">${q.question}</h3>
+      ${q.multiSelect ? `<div style="background:#eff6ff;padding:8px;border-left:4px solid #60a5fa;border-radius:6px;margin-bottom:12px">Select ALL that apply - Multiple answers required</div>` : ''}
+      <div>${optionsHtml}</div>
+      <div class="review-checkbox">
+        <input type="checkbox" id="review-${q.id}" ${isReviewed ? 'checked' : ''} onclick="toggleReview(${q.id})">
+        <label for="review-${q.id}">Mark for Review</label>
+      </div>
+      <div class="nav">
+        <div>
+          <button onclick="prevQ()" class="btn-ghost" ${state.currentIndex === 0 ? 'disabled' : ''}>Previous</button>
+        </div>
+        <div>
+          <button onclick="nextQ()" class="btn-primary" ${state.currentIndex === questions.length - 1 ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <strong>Question Navigation</strong>
+        <div class="grid-q">
+        ${questions.map((qq, idx) => {
+          const answered = state.answers[qq.id] && state.answers[qq.id].length > 0;
+          const isReviewed = state.review.includes(qq.id);
+          const curClass = idx === state.currentIndex ? 'current' : (answered ? 'answered' : isReviewed ? 'review' : '');
+          const reviewMark = isReviewed ? ' 🔍' : '';
+          return `<div class="qbox ${curClass}" onclick="goTo(${idx})">${idx + 1}${reviewMark}</div>`;
+        }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResults() {
+  let correct = 0;
+  questions.forEach(q => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    const isCorrect = user.length === corr.length && user.every(a => corr.includes(a));
+    if (isCorrect) correct++;
+  });
+  const pct = Math.round((correct / questions.length) * 100);
+  const timeTaken = 5400 - state.timeLeft;
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  return `
+    <div>
+      <div class="card center" style="margin-bottom:12px">
+        <h1>Exam Results</h1>
+        <div style="font-size:44px;font-weight:800;color:var(--orange)">${pct}%</div>
+        <h2 style="color:#111;margin-top:8px">${grade}</h2>
+        <div style="margin-top:6px">${correct} out of ${questions.length} correct</div>
+        <div style="margin-top:12px">
+          <button class="btn-primary" onclick="showCertificate()">View Certificate</button>
+        </div>
+      </div>
+      <div class="results" style="margin-bottom:12px">
+        <div class="card center">
+          <div style="font-size:32px;color:green;font-weight:700">${correct}</div>
+          <div>Correct</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:32px;color:red;font-weight:700">${questions.length - correct}</div>
+          <div>Incorrect</div>
+        </div>
+        <div class="card center">
+          <div style="font-size:20px;font-weight:700">${formatTime(timeTaken)}</div>
+          <div>Time Taken</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>All Questions - Review & Explanations</h3>
+        ${questions.map(q => {
+          const user = state.answers[q.id] || [];
+          const isCorrect = user.length === q.correct.length && user.every(a => q.correct.includes(a));
+          const borderColor = isCorrect ? '#bbf7d0' : '#fecaca';
+          return `
+            <div style="border-left:4px solid ${borderColor};padding:12px;margin-top:12px">
+              <div style="font-weight:700">Question ${q.id} — <small>${q.section}</small> — <span style="color:${isCorrect ? 'green' : 'red'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></div>
+              <div style="margin-top:8px"><strong>${q.question}</strong></div>
+              <div style="margin-top:8px">
+                ${q.options.map((opt, idx) => {
+                  const isCorrect = q.correct.includes(idx);
+                  const isUser = user.includes(idx);
+                  const mark = isCorrect ? '✔️' : (isUser && !isCorrect ? '❌' : '');
+                  const bg = isCorrect ? 'background:#ecfccb;border:1px solid #bbf7d0;padding:8px;border-radius:6px;margin-bottom:6px;' 
+                            : (isUser ? 'background:#fff1f2;border:1px solid #fecaca;padding:8px;border-radius:6px;margin-bottom:6px;' : 'padding:8px;border-radius:6px;margin-bottom:6px;border:1px solid #eee;');
+                  return `<div style="${bg}">${mark} ${opt}</div>`;
+                }).join('')}
+              </div>
+              <div class="explain"><strong>Explanation:</strong> <div>${q.explanation}</div></div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCertificate() {
+  const correct = questions.reduce((acc, q) => {
+    const user = state.answers[q.id] || [];
+    const corr = q.correct;
+    return acc + (user.length === corr.length && user.every(a => corr.includes(a)) ? 1 : 0);
+  }, 0);
+  const pct = Math.round((correct / questions.length) * 100);
+  const grade = pct >= 92 ? 'Pass with Distinction' : pct >= 83 ? 'Pass with Merit' : pct >= 70 ? 'Pass' : 'Fail';
+  const date = new Date('2025-10-27T00:00:00+05:30').toLocaleString('en-US', { timeZone: 'Asia/Kolkata', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+  return `
+    <div class="certificate-card">
+      <img src="https://www.uipath.com/hubfs/brand-guidelines/UiPath-Logo-Primary-RGB.png" alt="UiPath Logo" class="certificate-logo">
+      <div class="certificate-title">Certificate of Achievement</div>
+      <div class="certificate-subtitle">UiPath Agentic Automation Associate Mock Test 12</div>
+      <div class="certificate-text">This certifies that</div>
+      <div class="certificate-name">${state.userName || 'Candidate'}</div>
+      <div class="certificate-text">has successfully completed the mock exam with a score of</div>
+      <div class="certificate-name">${pct}%</div>
+      <div class="certificate-text">Grade: ${grade}</div>
+      <div class="certificate-date">Issued on ${date} IST</div>
+      <div style="margin-top:20px">
+        <button class="btn-primary" onclick="backToResults()">Back to Results</button>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (!state.examStarted) {
+    app.innerHTML = renderStart();
+    return;
+  }
+  if (state.showCertificate) {
+    app.innerHTML = renderCertificate();
+    return;
+  }
+  if (state.showResults) {
+    app.innerHTML = renderResults();
+    return;
+  }
+  app.innerHTML = renderQuestion();
+}
+
+function beginExam() {
+  const userNameInput = document.getElementById('userName');
+  const userName = userNameInput ? userNameInput.value.trim() : '';
+  if (!userName) {
+    state.userNameError = 'Please enter your name to start the exam.';
+    render();
+    return;
+  }
+  state.userName = userName;
+  state.userNameError = '';
+  state.examStarted = true;
+  state.timeLeft = 5400;
+  startTimer();
+  render();
+}
+
+function toggleAnswer(qid, optIdx) {
+  const q = questions.find(x => x.id === qid);
+  const cur = state.answers[qid] || [];
+  if (q.multiSelect) {
+    if (cur.includes(optIdx)) {
+      state.answers[qid] = cur.filter(i => i !== optIdx);
+    } else {
+      state.answers[qid] = [...cur, optIdx];
+    }
+  } else {
+    state.answers[qid] = [optIdx];
+  }
+  render();
+}
+
+function toggleReview(qid) {
+  if (state.review.includes(qid)) {
+    state.review = state.review.filter(id => id !== qid);
+  } else {
+    state.review = [...state.review, qid];
+  }
+  render();
+}
+
+function prevQ() { state.currentIndex = Math.max(0, state.currentIndex - 1); render(); }
+function nextQ() { state.currentIndex = Math.min(questions.length - 1, state.currentIndex + 1); render(); }
+function goTo(i) { state.currentIndex = i; render(); }
+
+function showCertificate() {
+  state.showCertificate = true;
+  render();
+}
+
+function backToResults() {
+  state.showCertificate = false;
+  render();
+}
+
+function submitExam() {
+  if (state.review.length > 0) {
+    const reviewQuestions = state.review.map(id => id).join(', ');
+    const confirmSubmit = window.confirm(`The following questions are marked for review: ${reviewQuestions}. Do you want to review them before submitting? Click 'Cancel' to review, or 'OK' to submit.`);
+    if (!confirmSubmit) {
+      const firstReviewId = state.review[0];
+      state.currentIndex = questions.findIndex(q => q.id === firstReviewId);
+      render();
+      return;
+    }
+  }
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.showResults = true;
+  render();
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
